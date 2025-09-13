@@ -920,6 +920,64 @@ LTEST_DECLARE(anchor_right_margin2)
     LTEST_VEC4EQ(lay_get_rect(ctx, child), 40, 40, 50, 50);
 }
 
+LTEST_DECLARE(padding1)
+{
+    lay_id root = lay_item(ctx);
+    lay_set_paddings_ltrb(ctx, root, 10, 10, 10, 10);
+
+    lay_id child = lay_item(ctx);
+    lay_set_size_xy(ctx, child, 15, 15);
+
+    lay_insert(ctx, root, child);
+
+    lay_run_context(ctx);
+
+    LTEST_VEC4EQ(lay_get_rect(ctx, root), 0, 0, 35, 35);
+    LTEST_VEC4EQ(lay_get_rect(ctx, child), 10, 10, 15, 15);
+}
+
+LTEST_DECLARE(padding_row)
+{
+    lay_id root = lay_item(ctx);
+    lay_set_paddings_ltrb(ctx, root, 10, 10, 10, 10);
+    lay_set_contain(ctx, root, LAY_ROW);
+
+    lay_id child1 = lay_item(ctx);
+    lay_set_size_xy(ctx, child1, 15, 15);
+    lay_insert(ctx, root, child1);
+
+    lay_id child2 = lay_item(ctx);
+    lay_set_size_xy(ctx, child2, 15, 15);
+    lay_insert(ctx, root, child2);
+
+    lay_run_context(ctx);
+
+    LTEST_VEC4EQ(lay_get_rect(ctx, root), 0, 0, 50, 35);
+    LTEST_VEC4EQ(lay_get_rect(ctx, child1), 10, 10, 15, 15);
+    LTEST_VEC4EQ(lay_get_rect(ctx, child2), 25, 10, 15, 15);
+}
+
+LTEST_DECLARE(padding_column)
+{
+    lay_id root = lay_item(ctx);
+    lay_set_paddings_ltrb(ctx, root, 10, 10, 10, 10);
+    lay_set_contain(ctx, root, LAY_COLUMN);
+
+    lay_id child1 = lay_item(ctx);
+    lay_set_size_xy(ctx, child1, 15, 15);
+    lay_insert(ctx, root, child1);
+
+    lay_id child2 = lay_item(ctx);
+    lay_set_size_xy(ctx, child2, 15, 15);
+    lay_insert(ctx, root, child2);
+
+    lay_run_context(ctx);
+
+    LTEST_VEC4EQ(lay_get_rect(ctx, root), 0, 0, 35, 50);
+    LTEST_VEC4EQ(lay_get_rect(ctx, child1), 10, 10, 15, 15);
+    LTEST_VEC4EQ(lay_get_rect(ctx, child2), 10, 25, 15, 15);
+}
+
 // Call in main to run a test by name
 //
 // Resets string buffer and lay context before running test
@@ -966,6 +1024,9 @@ int main(int argc, char** argv)
     LTEST_RUN(wrap_column_4);
     LTEST_RUN(anchor_right_margin1);
     LTEST_RUN(anchor_right_margin2);
+    LTEST_RUN(padding1);
+    LTEST_RUN(padding_row);
+    LTEST_RUN(padding_column);
 
     printf("Finished tests\n");
 

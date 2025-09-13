@@ -93,6 +93,7 @@ typedef struct lay_item_t {
     lay_id first_child;
     lay_id next_sibling;
     lay_vec4 margins;
+    lay_vec4 paddings;
     lay_vec2 size;
 } lay_item_t;
 
@@ -369,6 +370,21 @@ LAY_EXPORT void lay_set_margins(lay_context *ctx, lay_id item, lay_vec4 ltrb);
 // Same as lay_set_margins, but the components are passed as separate arguments
 // (left, top, right, bottom).
 LAY_EXPORT void lay_set_margins_ltrb(lay_context *ctx, lay_id item, lay_scalar l, lay_scalar t, lay_scalar r, lay_scalar b);
+
+// Get the paddings that were set by lay_set_paddings. The _ltrb version writes
+// the output values to the specified addresses instead of returning the values
+// in a lay_vec4.
+// l: left, t: top, r: right, b: bottom
+LAY_EXPORT lay_vec4 lay_get_paddings(lay_context *ctx, lay_id item);
+LAY_EXPORT void lay_get_paddings_ltrb(lay_context *ctx, lay_id item, lay_scalar *l, lay_scalar *t, lay_scalar *r, lay_scalar *b);
+
+// Set the paddings on an item. The components of the vector are:
+// 0: left, 1: top, 2: right, 3: bottom.
+LAY_EXPORT void lay_set_paddings(lay_context *ctx, lay_id item, lay_vec4 ltrb);
+
+// Same as lay_set_paddings, but the components are passed as separate arguments
+// (left, top, right, bottom)
+LAY_EXPORT void lay_set_paddings_ltrb(lay_context *ctx, lay_id item, lay_scalar l, lay_scalar t, lay_scalar r, lay_scalar b);
 
 // Get the pointer to an item in the buffer by its id. Don't keep this around --
 // it will become invalid as soon as any reallocation occurs. Just store the id
@@ -768,6 +784,37 @@ void lay_get_margins_ltrb(
     *b = margins[3];
 }
 
+void lay_set_paddings(lay_context *ctx, lay_id item, lay_vec4 ltrb)
+{
+    lay_item_t *pitem = lay_get_item(ctx, item);
+    pitem->paddings = ltrb;
+}
+void lay_set_paddings_ltrb(
+        lay_context *ctx, lay_id item,
+        lay_scalar l, lay_scalar t, lay_scalar r, lay_scalar b)
+{
+    lay_item_t *pitem = lay_get_item(ctx, item);
+    pitem->paddings[0] = l;
+    pitem->paddings[1] = t;
+    pitem->paddings[2] = r;
+    pitem->paddings[3] = b;
+}
+
+lay_vec4 lay_get_paddings(lay_context *ctx, lay_id item)
+{ return lay_get_item(ctx, item)->paddings; }
+
+void lay_get_paddings_ltrb(
+        lay_context *ctx, lay_id item,
+        lay_scalar *l, lay_scalar *t, lay_scalar *r, lay_scalar *b)
+{
+    lay_item_t *pitem = lay_get_item(ctx, item);
+    lay_vec4 paddings = pitem->paddings;
+    *l = paddings[0];
+    *t = paddings[1];
+    *r = paddings[2];
+    *b = paddings[3];
+}
+
 // TODO restrict item ptrs correctly
 static LAY_FORCE_INLINE
 lay_scalar lay_calc_overlayed_size(
@@ -785,7 +832,7 @@ lay_scalar lay_calc_overlayed_size(
         need_size = lay_scalar_max(need_size, child_size);
         child = pchild->next_sibling;
     }
-    return need_size;
+    return pitem->paddings[dim] + pitem->paddings[wdim] + need_size;
 }
 
 static LAY_FORCE_INLINE
@@ -802,7 +849,7 @@ lay_scalar lay_calc_stacked_size(
         need_size += rect[dim] + rect[2 + dim] + pchild->margins[wdim];
         child = pchild->next_sibling;
     }
-    return need_size;
+    return pitem->paddings[dim] + pitem->paddings[wdim] + need_size;
 }
 
 static LAY_FORCE_INLINE
@@ -825,7 +872,7 @@ lay_scalar lay_calc_wrapped_overlayed_size(
         need_size = lay_scalar_max(need_size, child_size);
         child = pchild->next_sibling;
     }
-    return need_size2 + need_size;
+    return pitem->paddings[dim] + pitem->paddings[wdim] + need_size2 + need_size;
 }
 
 // Equivalent to uiComputeWrappedStackedSize
@@ -848,7 +895,7 @@ lay_scalar lay_calc_wrapped_stacked_size(
         need_size += rect[dim] + rect[2 + dim] + pchild->margins[wdim];
         child = pchild->next_sibling;
     }
-    return lay_scalar_max(need_size2, need_size);
+    return pitem->paddings[dim] + pitem->paddings[wdim] + lay_scalar_max(need_size2, need_size);
 }
 
 static void lay_calc_size(lay_context *ctx, lay_id item, int dim)
@@ -920,9 +967,9 @@ void lay_arrange_stacked(
 
     const uint32_t item_flags = pitem->flags;
     lay_vec4 rect = ctx->rects[item];
-    lay_scalar space = rect[2 + dim];
+    lay_scalar space = rect[2 + dim] - pitem->paddings[dim] - pitem->paddings[wdim];
 
-    float max_x2 = (float)(rect[dim] + space);
+    float max_x2 = (float)(rect[dim] + space + pitem->paddings[dim]);
 
     lay_id start_child = pitem->first_child;
     while (start_child != LAY_INVALID_ID) {
@@ -1010,7 +1057,7 @@ void lay_arrange_stacked(
             eater = (float)extra_space / (float)squeezed_count;
 
         // distribute width among items
-        float x = (float)rect[dim];
+        float x = (float)rect[dim] + pitem->paddings[dim];
         float x1;
         // second pass: distribute and rescale
         child = start_child;
@@ -1054,8 +1101,8 @@ void lay_arrange_overlay(lay_context *ctx, lay_id item, int dim)
     const int wdim = dim + 2;
     lay_item_t *pitem = lay_get_item(ctx, item);
     const lay_vec4 rect = ctx->rects[item];
-    const lay_scalar offset = rect[dim];
-    const lay_scalar space = rect[2 + dim];
+    const lay_scalar offset = rect[dim] + pitem->paddings[dim];
+    const lay_scalar space = rect[2 + dim] - pitem->paddings[dim] - pitem->paddings[wdim];
     
     lay_id child = pitem->first_child;
     while (child != LAY_INVALID_ID) {
@@ -1126,7 +1173,7 @@ lay_scalar lay_arrange_wrapped_overlay_squeezed(
 {
     const int wdim = dim + 2;
     lay_item_t *pitem = lay_get_item(ctx, item);
-    lay_scalar offset = ctx->rects[item][dim];
+    lay_scalar offset = ctx->rects[item][dim] + pitem->paddings[dim];
     lay_scalar need_size = 0;
     lay_id child = pitem->first_child;
     lay_id start_child = child;
@@ -1176,7 +1223,8 @@ static void lay_arrange(lay_context *ctx, lay_id item, int dim)
             const lay_vec4 rect = ctx->rects[item];
             lay_arrange_overlay_squeezed_range(
                 ctx, dim, pitem->first_child, LAY_INVALID_ID,
-                rect[dim], rect[2 + dim]);
+                rect[dim] + pitem->paddings[dim],
+                rect[2 + dim] - pitem->paddings[dim] - pitem->paddings[2 + dim]);
         }
         break;
     default:
