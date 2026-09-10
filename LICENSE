@@ -6,6 +6,10 @@ Blendish - Blender 2.5 UI based theming functions for NanoVG
 
 Copyright (c) 2014 Leonard Ritter <leonard.ritter@duangle.com>
 
+Onlay - a fork of the above, converted to plain C99 and extended
+
+Copyright (c) 2026 Roman Chojnacki
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
