@@ -1,5 +1,7 @@
 # Onlay
 
+![An app layout reflowing as its window and sidebar change width](docs/demo.gif)
+
 A 2D layout engine in C99. It computes rectangles and does nothing else — it
 draws nothing, owns no widgets, handles no input, and knows nothing about the
 program using it.
@@ -31,8 +33,8 @@ lay_vec4 r = lay_get_rect(&ctx, row);   /* r.v[0..3] is x, y, w, h */
 lay_destroy_context(&ctx);
 ```
 
-Single header. `#define LAY_IMPLEMENTATION` in exactly one translation unit.
-`#define LAY_FLOAT 1` for float coordinates instead of `int16_t`.
+Single header. `#define LAY_IMPLEMENTATION` in exactly one translation unit of
+your program. `#define LAY_FLOAT 1` for float coordinates instead of `int16_t`.
 
 ## What is different from randrew/layout
 
@@ -75,6 +77,13 @@ cc -DLAY_FLOAT=1 -o onlaytest test_onlay.c onlay.c && ./onlaytest
 
 CI runs it with float and `int16_t` coordinates on GCC, Clang and MSVC, warnings
 as errors.
+
+The animation above is Onlay's own output: `tools/demo.c` lays the same app out
+at every frame and `tools/demo.py` draws the rectangles it prints (Pillow).
+
+```
+cc -DLAY_FLOAT=1 -o demo tools/demo.c onlay.c -lm && ./demo | python tools/demo.py
+```
 
 ## License
 
