@@ -114,9 +114,9 @@ test_weighted_columns(void)
     for (i = 0; i < n; i++) {
         lay_vec4 r = lay_get_rect(&ctx, kid[i]);
         char label[32];
-        sprintf(label, "%.0f%% width", (double)(cols[i].w * 100.0f));
+        snprintf(label, sizeof label, "%.0f%% width", (double)(cols[i].w * 100.0f));
         check(label, (int)r.v[2], cols[i].expect_w);
-        sprintf(label, "%.0f%% x", (double)(cols[i].w * 100.0f));
+        snprintf(label, sizeof label, "%.0f%% x", (double)(cols[i].w * 100.0f));
         check(label, (int)r.v[0], cols[i].expect_x);
     }
     lay_destroy_context(&ctx);
@@ -183,16 +183,16 @@ test_template_rows(void)
     lay_reserve_items_capacity(&ctx, 32);
 
     page = lay_item(&ctx);
-    lay_set_size_xy(&ctx, page, W, 200);
+    lay_set_size_xy(&ctx, page, (lay_scalar)W, 200);
     lay_set_contain(&ctx, page, LAY_COLUMN | LAY_START);
-    lay_set_gap(&ctx, page, ROW_GAP2);
+    lay_set_gap(&ctx, page, (lay_scalar)ROW_GAP2);
 
     for (r = 0; r < ROWS; r++) {
         row = lay_item(&ctx);
         lay_set_behave(&ctx, row, LAY_HFILL);
         lay_set_size_xy(&ctx, row, 0, 30);
         lay_set_contain(&ctx, row, LAY_ROW | LAY_START);
-        lay_set_gap(&ctx, row, COL_GAP);
+        lay_set_gap(&ctx, row, (lay_scalar)COL_GAP);
         lay_insert(&ctx, page, row);
 
         for (c = 0; c < 3; c++) {
@@ -213,9 +213,9 @@ test_template_rows(void)
         for (c = 0; c < 3; c++) {
             lay_vec4 q = lay_get_rect(&ctx, cell[r][c]);
             char label[40];
-            sprintf(label, "row %d col %d x", r, c);
+            snprintf(label, sizeof label, "row %d col %d x", r, c);
             check(label, (int)q.v[0], (int)want_x[c]);
-            sprintf(label, "row %d col %d w", r, c);
+            snprintf(label, sizeof label, "row %d col %d w", r, c);
             check(label, (int)q.v[2], (int)want_w[c]);
         }
     lay_destroy_context(&ctx);

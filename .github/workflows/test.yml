@@ -1,0 +1,50 @@
+name: Test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unix:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: linux gcc, runner: ubuntu-24.04, cc: gcc }
+          - { name: linux clang, runner: ubuntu-24.04, cc: clang }
+          - { name: macos clang, runner: macos-15, cc: clang }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Float coordinates
+        run: |
+          ${{ matrix.cc }} -std=c99 -Wall -Wextra -Werror -DLAY_FLOAT=1 -o test_float test_onlay.c onlay.c
+          ./test_float
+      - name: int16_t coordinates
+        run: |
+          ${{ matrix.cc }} -std=c99 -Wall -Wextra -Werror -o test_int test_onlay.c onlay.c
+          ./test_int
+
+  windows:
+    name: windows msvc
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Float and int16_t coordinates
+        shell: cmd
+        run: |
+          for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do call "%%i\VC\Auxiliary\Build\vcvars64.bat"
+          cl /nologo /W4 /WX /DLAY_FLOAT=1 /Fe:test_float.exe test_onlay.c onlay.c || exit /b 1
+          test_float.exe || exit /b 1
+          cl /nologo /W4 /WX /Fe:test_int.exe test_onlay.c onlay.c || exit /b 1
+          test_int.exe
