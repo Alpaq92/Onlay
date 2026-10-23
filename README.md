@@ -53,16 +53,14 @@ fraction.
 **Gaps.** `lay_set_gap(ctx, item, n)` puts space between an item's children
 without putting it outside them, so a row of three has two gaps and no leading
 or trailing one. It applies down a wrapped row's lines as well as along them,
-and it is counted when a container is sized to its contents — otherwise a
-container came out exactly one gap per child too short.
+and counts when a container is sized to its contents — otherwise a container
+came out one gap per child too short.
 
 **Padding**, from [randrew/layout#23](https://github.com/randrew/layout/pull/23)
 by [codecat](https://github.com/codecat), ported onto the struct rect. A margin
 is space outside an item and a padding is space inside it: a padding insets the
-rect an item lays its children into, and is added when that item is sized to
-its contents.
-
-Every change is marked `// ONLAY:` in the source with the reason next to it.
+rect an item lays its children into, and is added on both sides when that item
+is sized to its contents.
 
 ## Tests
 
@@ -72,10 +70,13 @@ weighted columns, floors that grow, template rows, and padding against margin.
 Upstream's own `test_layout.c` is not carried: it assumes the vector rect.
 
 ```
-cc -DLAY_FLOAT=1 -o onlaytest test_onlay.c && ./onlaytest
+cc -DLAY_FLOAT=1 -o onlaytest test_onlay.c onlay.c && ./onlaytest
 ```
 
-## Licence
+CI runs it with float and `int16_t` coordinates on GCC, Clang and MSVC, warnings
+as errors.
+
+## License
 
 MIT, as upstream. See `LICENSE` — the original copyright is Andrew Richards's
 and is unchanged.
