@@ -1,12 +1,5 @@
-/* test_onlay.c - Onlay against known-good geometry.
- *
- * The first case is not invented: it is Reaktor's login card, with the
- * expected coordinates taken from the accessibility dump of the running
- * application rather than from Onlay. If Onlay disagrees with those numbers it
- * is Onlay that is wrong.
- *
- * The rest cover weighted tracks, which is the one piece of arithmetic Onlay
- * adds to what it was forked from. */
+/* The login card's expected coordinates come from Reaktor's accessibility
+   dump of the running application, not from Onlay. */
 #include <stdio.h>
 #include <string.h>
 
@@ -59,14 +52,9 @@ test_login_card(void)
 
     col = lay_item(&ctx);
     lay_set_behave(&ctx, col, LAY_FILL);
-    /* A container that does not say how to distribute slack centres it -
-     * LAY_MIDDLE is zero. Saying START is not optional. */
+    /* LAY_MIDDLE is zero, so a container that names no START centers. */
     lay_set_contain(&ctx, col, LAY_COLUMN | LAY_START);
     lay_set_margins_ltrb(&ctx, col, PAD_X, PAD_Y, PAD_X, PAD_Y);
-    /* The gap is the container's business, not each child's. Expressed as a
-     * margin on every row but the first, this produces the same seven
-     * coordinates - which is what makes it a test of gap rather than of the
-     * numbers. */
     lay_set_gap(&ctx, col, ROW_GAP);
     lay_insert(&ctx, card, col);
 
@@ -234,14 +222,7 @@ test_template_rows(void)
 }
 
 
-/* Padding, from randrew/layout#23.
- *
- * A margin is space outside an item and a padding is space inside it, and the
- * two are told apart by who moves: a margin moves the item, a padding moves
- * the item's children and leaves the item where it was. Both halves are
- * checked here, because a padding that only insets the children would still
- * pass a test that looked at the children alone - the container has to report
- * itself larger too, or a parent sizing to its contents will crop it. */
+/* A padding moves the children and leaves the item; a margin moves the item. */
 static void
 test_padding(void)
 {
@@ -297,7 +278,6 @@ test_padding(void)
           (int)ra.v[0], (int)rr.v[0]);
     check("the box is only as wide as its children", (int)rr.v[2], 70);
 
-    /* And that the getter answers what the setter was given. */
     {
         lay_scalar l = 0, t = 0, r = 0, b2 = 0;
         lay_set_paddings_ltrb(&ctx, box, 1, 2, 3, 4);
