@@ -630,7 +630,7 @@ lay_scalar lay_calc_wrapped_stacked_size(
         lay_vec4 rect = ctx->rects[child];
         if (pchild->flags & LAY_BREAK) {
             if (kids > 1 && pitem->gap > 0)
-                need_size += pitem->gap * (kids - 1);
+                need_size += pitem->gap * (lay_scalar)(kids - 1);
             need_size2 = lay_scalar_max(need_size2, need_size);
             need_size = 0;
             kids = 0;
@@ -640,7 +640,7 @@ lay_scalar lay_calc_wrapped_stacked_size(
         child = pchild->next_sibling;
     }
     if (kids > 1 && pitem->gap > 0)
-        need_size += pitem->gap * (kids - 1);
+        need_size += pitem->gap * (lay_scalar)(kids - 1);
     return pitem->paddings.v[dim] + pitem->paddings.v[wdim] + lay_scalar_max(need_size2, need_size);
 }
 
